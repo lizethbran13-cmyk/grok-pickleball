@@ -92,7 +92,7 @@
     opts = opts || {}; G.curLooks = opts.looks || null;
     G.m = m; G.court = court; G.names = names; G.playing = true; G.paused = false; G.replay = null; G.pendingReplay = null; G.bestClip = null; G.longest = 0; G.ctrl = opts.ctrl || null; G.kind = opts.kind || 'quick'; G.cfg = opts.cfg || {}; G.me = opts.me || 0; G.side = R.teamOfPlayer(m.game, G.me); G.isGuest = !!opts.guest;
     UI.show('scrTitle', false); UI.close(); UI.show('hud', true); clearBubbles();
-    V.setCourt(court); V.setPlayers(opts.looks || G.looksFor(m)); V.playCam(0, 0, G.side, 0, true);
+    V.setCourt(court); V.setPlayers(opts.looks || G.looksFor(m), { doubles: m.o.doubles, me: opts.guest || opts.kind === 'online' ? opts.me : (opts.ctrl ? 0 : 0) }); V.playCam(0, 0, G.side, 0, true);
     G.applyAssistUI(); Snd.setMusic(court); G.lastFrameT = 0;
     $('drill').classList.toggle('hidden', !opts.drill); $('shots').classList.toggle('hidden', !!opts.noShots); $('bTaunt').classList.toggle('hidden', !!opts.drill);
     $('board').classList.toggle('hidden', !!opts.drill);
@@ -125,7 +125,7 @@
   G.setGfx = function (v, user) {
     if (v !== 'high' && v !== 'low') return; G.gfx = v; if (user) { G.gfxUser = true; try { localStorage.setItem('grokPickleball.gfx', v); } catch (e) {} }
     V.setQuality(v); const id = V.envName; V.court && (V.court.userData.q = '?'); if (id) V.setCourt(id);
-    if (G.playing && G.m) V.setPlayers(G.curLooks || G.looksFor(G.m)); else if (G.demo && !G.locker) V.setPlayers(G.demo.players.map((p) => p.look)); else if (G.locker) G.refreshLocker();
+    if (G.playing && (G.m || G.mirror)) V.setPlayers(G.curLooks || G.looksFor(G.m), V.lastPlayers && V.lastPlayers[1]); else if (G.demo && !G.locker) V.setPlayers(G.demo.players.map((p) => p.look)); else if (G.locker) G.refreshLocker();
   };
 
   /* ---------- pause ---------- */
@@ -180,7 +180,7 @@
     addEventListener('blur', () => { G.inp.keys = {}; });
   }
   function swipeAim(dx, dy) { const up = Math.max(40, -dy); return { ax: U.clamp(dx / up * 1.1, -1.4, 1.4), pow: U.clamp((Math.hypot(dx, dy) - 24) / 220, 0, 1) }; }
-  function moveInput() {
+  G.moveInput = moveInput; function moveInput() {
     const k = G.inp.keys; let mx = (k.d || k.arrowright ? 1 : 0) - (k.a || k.arrowleft ? 1 : 0), mz = (k.w || k.arrowup ? 1 : 0) - (k.s || k.arrowdown ? 1 : 0);
     if (!mx && !mz) { mx = G.inp.joy.x; mz = -G.inp.joy.y; }
     const l = Math.hypot(mx, mz); if (l > 1) { mx /= l; mz /= l; } return { mx, mz };
@@ -234,14 +234,14 @@
   };
 
   /* ---------- replays ---------- */
-  G.playReplay = function (clip, done) { if (!clip || clip.length < 3) { if (done) done(); return; } G.replay = { clip, t: clip[0].t, done }; $('replayBar').classList.remove('hidden'); if (!G.playing) { G.playing = true; UI.show('hud', true); } };
-  G.skipReplay = function () { if (!G.replay) return; const d = G.replay.done; G.replay = null; $('replayBar').classList.add('hidden'); if (d) d(); };
+  G.playReplay = function (clip, done) { if (!clip || clip.length < 3) { if (done) done(); return; } G.replay = { clip, t: clip[0].t, done }; $('replayBar').classList.remove('hidden'); $('hud').classList.add('replaying'); clearBubbles(); if (!G.playing) { G.playing = true; UI.show('hud', true); } };
+  G.skipReplay = function () { if (!G.replay) return; const d = G.replay.done; G.replay = null; $('replayBar').classList.add('hidden'); $('hud').classList.remove('replaying'); if (d) d(); };
   function replayTick(dt) {
     const r = G.replay, c = r.clip; r.t += dt * 0.6; let i = 0; while (i < c.length - 2 && c[i + 1].t < r.t) i++;
     const a = c[i], b = c[i + 1] || a, k = U.clamp((r.t - a.t) / Math.max(1e-3, b.t - a.t), 0, 1);
     const ball = { x: U.lerp(a.b[0], b.b[0], k), y: U.lerp(a.b[1], b.b[1], k), z: U.lerp(a.b[2], b.b[2], k), live: true, speed: 10 };
     const ps = a.p.map((p, j) => { const q = b.p[j] || p; return { x: U.lerp(p[0], q[0], k), z: U.lerp(p[1], q[1], k), face: U.lerpAng(p[2], q[2], k), swingT: U.lerp(p[3], q[3] < p[3] ? p[3] + (b.t - a.t) : q[3], k), swingType: p[4], swingSide: p[5], spd: p[6], celebT: 0 }; });
-    V.syncPlayers(ps, dt * 0.6); V.syncBall(ball, dt * 0.6); V.replayCam(dt, ball, V.t); V.land(null); V.aim(null);
+    V.syncPlayers(ps, dt * 0.6); V.syncBall(ball, dt * 0.6); V.replayCam(dt, ball, V.t, G.side); V.land(null); V.aim(null);
     if (r.t >= c[c.length - 1].t) G.skipReplay();
   }
 
@@ -311,5 +311,5 @@
   }
 
   /* ---------- test hooks ---------- */
-  window.__pb = { G, PB, V, sim(sec, step) { const s = step || 1 / 60; for (let t = 0; t < sec; t += s) { if (G.m) { G.m.update(s); while (G.m.ev.length) G.onEvent(G.m.ev.shift()); if (G.ctrl && G.ctrl.tick) G.ctrl.tick(s); } } } };
+  window.__pb = { G, PB, V, sim(sec, step) { const s = step || 1 / 60, on = G.kind === 'online' && !G.isGuest; for (let t = 0; t < sec; t += s) { if (G.m) { G.m.update(s); while (G.m.ev.length) { const e = G.m.ev.shift(); if (on) PB.Net.queue(e); G.onEvent(e); } if (G.ctrl && G.ctrl.tick) G.ctrl.tick(s); } } if (on) PB.Net.hostTick(1); } };
 })();

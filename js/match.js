@@ -247,9 +247,9 @@
     let tz = dir * depth;
     // errors: humans by timing (assist trims it), AI by difficulty; pressure from fast/low balls
     const inSpeed = Math.hypot(b.vx, b.vy, b.vz), pressure = U.clamp((inSpeed - 9) / 12, 0, 1) * 0.6 + (b.y < 0.3 ? 0.4 : 0) + (type === 'smash' ? 0.2 : 0) + (type === 'drive' && pow > 0.85 ? 0.3 : 0);
-    let es, miss = false;
-    if (shot.ai) { const a = p.ai; es = a.aim * (0.7 + pressure * 0.6); miss = rnd() < a.err * (0.6 + pressure * 1.4); if (this.slowAI) es *= 1.08; vh *= a.pace; }
-    else { es = (shot.help ? 0.42 : 0.4) + (1 - shot.quality) * (shot.help ? 0.3 : 1.1) + pressure * (shot.help ? 0.3 : 0.35); vh *= shot.help ? 0.9 : 1; miss = rnd() < (shot.help ? 0.035 : 0.02) * (0.6 + pressure * 1.4); }
+    let es, miss = false; const tired = 1 + Math.max(0, r.hits - (this.o.doubles ? 6 : 9)) * (this.o.doubles ? 0.2 : 0.14) + (this.o.doubles ? 0.5 : 0);
+    if (shot.ai) { const a = p.ai; es = a.aim * (0.7 + pressure * 0.6); miss = rnd() < a.err * (0.6 + pressure * 2.6) * tired; if (this.slowAI) es *= 1.08; vh *= a.pace; }
+    else { es = (shot.help ? 0.42 : 0.4) + (1 - shot.quality) * (shot.help ? 0.3 : 1.1) + pressure * (shot.help ? 0.3 : 0.35); vh *= shot.help ? 0.9 : 1; miss = rnd() < (shot.help ? 0.035 : 0.02) * (0.6 + pressure * 2.6) * tired; }
     if (shot.help) { tx = U.clamp(tx, -D.HW + 0.35, D.HW - 0.35); }
     if (shot.ai && type !== 'dink') { const lim = D.HL - 0.35 - shot.marg; if (Math.abs(tz) > lim) tz = dir * lim; }
     tx += gauss(rnd) * es; tz += dir * gauss(rnd) * es * (type === 'dink' ? 0.5 : 1);

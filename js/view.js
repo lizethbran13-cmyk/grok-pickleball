@@ -61,9 +61,11 @@
   };
 
   /* ---------- players ---------- */
-  V.setPlayers = function (looks) {
-    V.models.forEach((m) => V.scene.remove(m)); V.models = [];
-    looks.forEach((lk) => { const m = M.athlete(lk); m.traverse((o) => { if (o.isMesh) o.castShadow = V.quality !== 'low'; }); if (V.quality !== 'low') M.outline(m); V.scene.add(m); m.userData.celeb = lk.celeb || 'fist'; V.models.push(m); });
+  V.setPlayers = function (looks, o) {
+    V.models.forEach((m) => V.scene.remove(m)); V.models = []; V.lastPlayers = [looks, o];
+    looks.forEach((lk, i) => { const m = M.athlete(lk);
+      if (o) { const team = o.doubles ? (i < 2 ? 0 : 1) : i, me = i === o.me, col = me ? '#ffe14d' : team === 0 ? '#3b82f6' : '#ef4444';   // team ring at the feet (yellow = you)
+        const rg = new T.Mesh(new T.RingGeometry(me ? 0.36 : 0.32, me ? 0.46 : 0.4, 28), new T.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.8, depthWrite: false, side: T.DoubleSide })); rg.rotation.x = -Math.PI / 2; rg.position.y = 0.025; rg.userData.glow = true; m.add(rg); } m.traverse((o) => { if (o.isMesh) o.castShadow = V.quality !== 'low' && !o.userData.glow; }); if (V.quality !== 'low') M.outline(m); V.scene.add(m); m.userData.celeb = lk.celeb || 'fist'; V.models.push(m); });
   };
   V.syncPlayers = function (ps, dt, extra) {
     ps.forEach((p, i) => { const m = V.models[i]; if (!m) return; m.visible = !p.hidden; m.position.set(p.x, 0, p.z); m.rotation.y = p.face;
@@ -114,7 +116,7 @@
   };
   V.orbitCam = function (dt, r, h, spd, target) { const a = V.t * (spd || 0.12); V.cam.fov = 55; V.cam.position.set(Math.sin(a) * r, h, Math.cos(a) * r); V.cam.lookAt(target || new T.Vector3(0, 0.5, 0)); V.cam.updateProjectionMatrix(); };
   V.lockerCam = function (m) { const p = m.position; const asp = V.cam.aspect; V.cam.fov = 40; V.cam.position.set(p.x + 0.0, 1.35, p.z + (asp < 1 ? 5.6 : 4.2)); V.cam.lookAt(p.x, asp < 1 ? 1.25 : 1.0, p.z); V.cam.updateProjectionMatrix(); };
-  V.replayCam = function (dt, b, t) { const a = 0.9 + Math.sin(t * 0.25) * 0.5; const want = new T.Vector3(Math.sin(a) * 11, 3.2, Math.cos(a) * 6 + b.z * 0.3); V.cam.position.lerp(want, Math.min(1, dt * 2)); V.cam.fov = 48; V.cam.lookAt(b.x * 0.5, 0.8, b.z * 0.6); V.cam.updateProjectionMatrix(); };
+  V.replayCam = function (dt, b, t, side) { const a = Math.sin(t * 0.3) * 0.55, s = side ? -1 : 1, portrait = innerHeight > innerWidth, r = portrait ? 15.5 : 13; const want = new T.Vector3(Math.sin(a) * r * s + b.x * 0.2, portrait ? 8.5 : 6.5, Math.cos(a) * r * s); V.cam.position.lerp(want, Math.min(1, dt * 2)); V.cam.fov = portrait ? 56 : 46; V.cam.lookAt(b.x * 0.3, 0.6, b.z * 0.35); V.cam.updateProjectionMatrix(); };
   V.project = function (x, y, z) { const v = new T.Vector3(x, y, z).project(V.cam); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight, vis: v.z < 1 }; };
   V.unproject = function (sx, sy) { // screen -> ground point (y = 0)
     const v = new T.Vector3(sx / innerWidth * 2 - 1, -(sy / innerHeight) * 2 + 1, 0.5).unproject(V.cam); const dir = v.sub(V.cam.position).normalize(); const t = -V.cam.position.y / dir.y; if (t < 0) return null; return { x: V.cam.position.x + dir.x * t, z: V.cam.position.z + dir.z * t }; };

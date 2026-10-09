@@ -80,11 +80,12 @@ input { font-family: inherit; font-weight: 800; font-size: 19px; padding: 10px 1
 #hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
 #hud button { pointer-events: auto; }
 #board { position: absolute; top: calc(8px + var(--st)); left: 50%; transform: translateX(-50%); display: flex; align-items: stretch; gap: 0; border-radius: 18px; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
-#board .tm { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: linear-gradient(180deg,#2563eb,#1e3a8a); min-width: 108px; }
+#board .tm { display: flex; align-items: center; gap: 5px; padding: 4px 8px; background: linear-gradient(180deg,#2563eb,#1e3a8a); min-width: 108px; }
 #board .tm.r { background: linear-gradient(180deg,#e11d48,#881337); justify-content: flex-end; }
 #board .tm b { font-size: 30px; min-width: 30px; text-align: center; color: #ffe14d; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
-#board .nm { font-size: 12px; max-width: 70px; line-height: 1.1; overflow: hidden; }
-#board .mid { background: #1e1b3a; display: flex; align-items: center; padding: 0 6px; font-size: 9px; color: #a5b4fc; width: 54px; text-align: center; line-height: 1.15; }
+#board .nm { font-size: 11.5px; max-width: 78px; line-height: 1.1; overflow: hidden; overflow-wrap: anywhere; }
+#hud.replaying #shots, #hud.replaying #swipeHelp, #hud.replaying #joy, #hud.replaying #hint, #hud.replaying #kWarn, #hud.replaying #assistTag, #hud.replaying #msg { display: none !important; }
+#board .mid { background: #1e1b3a; display: flex; align-items: center; padding: 0 4px; font-size: 9px; color: #a5b4fc; width: 48px; text-align: center; line-height: 1.15; }
 .srv { display: flex; gap: 3px; } .srv i { width: 10px; height: 10px; border-radius: 50%; background: #e6ff3b; box-shadow: 0 0 6px #e6ff3b; display: block; }
 #hudBtns { position: absolute; top: calc(8px + var(--st)); right: calc(8px + var(--sr)); display: flex; flex-direction: column; gap: 8px; }
 #assistTag { position: absolute; top: calc(66px + var(--st)); left: calc(8px + var(--sl)); background: rgba(22,163,74,.85); border: 2px solid #fff; border-radius: 12px; padding: 3px 8px; font-size: 11px; }

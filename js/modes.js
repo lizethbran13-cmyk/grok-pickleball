@@ -42,7 +42,7 @@
   function feedTo(m, tx, tz, vh, s, clear, minApex, type) { const f = m.players[1]; m.feed({ team: 1, p: 1, x: f.x + 0.25, y: 0.85, z: f.z + 0.4, tx, tz, vh, s, clear, minApex, type }); }
   function finishDrill(ctl, title, lines, again) {
     const g = G(); setTimeout(() => {
-      ctl.clean(); g.playing = false; UI.panel('<h2>' + title + '</h2>' + lines + '<div class="btnrow"><button class="btn alt" id="bM">MENU</button>' + (again ? '<button class="btn primary" id="bA">PLAY AGAIN</button>' : '') + '</div>', (c) => {
+      if (g.ctrl !== ctl) return; ctl.clean(); g.playing = false; UI.panel('<h2>' + title + '</h2>' + lines + '<div class="btnrow"><button class="btn alt" id="bM">MENU</button>' + (again ? '<button class="btn primary" id="bA">PLAY AGAIN</button>' : '') + '</div>', (c) => {
         c.querySelector('#bM').addEventListener('click', () => { UI.close(); g.toTitle(); });
         const a = c.querySelector('#bA'); if (a) a.addEventListener('click', () => { UI.close(); again(); });
       }, { name: 'drillEnd' });
@@ -67,7 +67,7 @@
       else { m.game = R.newGame({ doubles: false }); readyFeedPos(m); place(m, 0, 0, D.K + 0.35); ctl.wait = 0.8; m.phase = 'idle'; }
     };
     const progress = () => { const st = STEPS[ctl.step]; drill('<b>' + st.title + '</b><br>' + st.text + '<br>✅ ' + ctl.n + ' / ' + st.need); };
-    const good = (t) => { ctl.n++; PB.Snd.fx('perfect'); UI.msg('NICE! ✅', t, 1300); progress(); if (ctl.n >= STEPS[ctl.step].need) { ctl.step++; if (ctl.step >= STEPS.length) return done(); setTimeout(setup, 1500); ctl.pause = 1.5; } else ctl.again = 1.1; };
+    const good = (t) => { if (ctl.pause > 0 || ctl.step >= STEPS.length) return; ctl.n++; PB.Snd.fx('perfect'); UI.msg('NICE! ✅', t, 1300); progress(); if (ctl.n >= STEPS[ctl.step].need) { ctl.step++; if (ctl.step >= STEPS.length) return done(); ctl.pending = setup; ctl.pause = 1.5; } else ctl.again = 1.1; };
     const bad = (t, s) => { PB.Snd.fx('bad'); UI.msg(t, s || 'Try again!', 2200); ctl.again = 1.6; };
     const done = () => { const g = G(), first = !g.save.tutorialDone; g.save.tutorialDone = true; if (first) g.addCoins(100); g.persist(); finishDrill(ctl, '🎓 TUTORIAL DONE!', '<p class="sub">You know how to serve, the two-bounce rule, dinks and the kitchen. You\u2019re ready to play!' + (first ? '<br>🪙 +100 coins' : '') + '</p>', () => Mo.startTutorial()); ctl.over = true; };
     ctl.feedNext = () => { const st = STEPS[ctl.step].id; m.players.forEach((p) => { p.req = null; });
@@ -77,13 +77,13 @@
     };
     ctl.tick = (dt) => {
       if (ctl.over) return;
-      if (ctl.pause > 0) { ctl.pause -= dt; return; }
+      if (ctl.pause > 0) { ctl.pause -= dt; if (ctl.pause <= 0 && ctl.pending) { const f = ctl.pending; ctl.pending = null; f(); } return; }
       if (ctl.again > 0) { ctl.again -= dt; if (ctl.again <= 0) ctl.feedNext(); return; }
       if (ctl.wait > 0) { ctl.wait -= dt; if (ctl.wait <= 0) ctl.feedNext(); return; }
       if (m.phase === 'dead' && m.phaseT > 2.2 && !ctl.again && !ctl.pause) ctl.feedNext();
     };
     ctl.onEvent = (e) => {
-      const st = STEPS[ctl.step] && STEPS[ctl.step].id; if (ctl.over) return true;
+      const st = STEPS[ctl.step] && STEPS[ctl.step].id; if (ctl.over || ctl.pause > 0 || !st) return true;
       if (e.t === 'callout') { if (st === 'serve') UI.hint('Swipe up to serve into the yellow box ↗️', 2500); return true; }
       if (e.t === 'hit' && e.p === 0) { ctl.lastMine = e; }
       if (e.t === 'bounce') {
@@ -122,7 +122,7 @@
       if (id === 'serve') { m.game = R.newGame({ doubles: false, firstServe: 0 }); m.game.score[0] = ctl.n % 2; R.setServer(m.game); m.players[1].noHit = true; m.setPhase('pre'); ctl.clean(); const want = m.game.serverSide === 'R' ? -1 : 1; ctl.objs.push(zone(want < 0 ? -D.HW : 0, -D.K, want < 0 ? 0 : D.HW, -D.HL, '#ffe14d')); ctl.objs.push(target(want * (D.HW - 0.65), -(D.HL - 0.65), 0.6, '#ff4fd8', 5), target(want * 0.6, -(D.HL - 0.7), 0.55, '#3ff0ff', 3)); ctl.tg = ctl.objs.slice(1); hud(); return; }
       readyFeedPos(m);
       if (id === 'dinks') { place(m, 0, (Math.random() - 0.5) * 1.6, D.K + 0.45); feedTo(m, m.players[0].x + (Math.random() - 0.5) * 0.8, 1.2 + Math.random() * 0.5, 4.6, -0.3, 0.14, 0, 'dink'); }
-      else if (id === 'react') { place(m, 0, 0, D.K + 0.4); place(m, 1, (Math.random() - 0.5) * 2, -(D.HL - 0.6)); const sp = Math.min(16, 9 + ctl.combo * 0.5); const px = m.players[0].x + (Math.random() < 0.5 ? -1 : 1) * (0.35 + Math.random() * 0.5); feedTo(m, px, D.HL + 1.5, sp, 0.8, 0.25, 0, 'drive'); }
+      else if (id === 'react') { place(m, 0, 0, D.K + 0.4); place(m, 1, (Math.random() - 0.5) * 2, -(D.HL - 0.6)); const sp = Math.min(19, 12.5 + ctl.combo * 0.45); const px = m.players[0].x + (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.45); feedTo(m, px, m.players[0].z + 2.4, sp, 0.6, 0.12, 0, 'drive'); }
       else if (id === 'smash') { place(m, 0, (Math.random() - 0.5) * 1.6, 3.6); place(m, 1, (Math.random() - 0.5) * 2, -(D.HL - 0.4)); feedTo(m, m.players[0].x + (Math.random() - 0.5) * 1.2, 3.4 + Math.random() * 1.2, 8, 0.4, 2.6, 4.6, 'lob'); }
       hud();
     };
