@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#16a34a" />
+  <title>GROK PICKLEBALL</title>
+  <link rel="stylesheet" href="style.css?v=1" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2316a34a'/%3E%3Ccircle cx='32' cy='32' r='20' fill='%23e6ff3b'/%3E%3Ccircle cx='25' cy='26' r='3' fill='%2384a110'/%3E%3Ccircle cx='38' cy='24' r='3' fill='%2384a110'/%3E%3Ccircle cx='32' cy='36' r='3' fill='%2384a110'/%3E%3Ccircle cx='22' cy='38' r='3' fill='%2384a110'/%3E%3Ccircle cx='42' cy='37' r='3' fill='%2384a110'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="touch"></div>
+  <div id="bubbles"></div>
+
+  <div id="hud" class="hidden">
+    <div id="board">
+      <div class="tm" id="tm0"><span class="nm" id="nm0">YOU</span><span class="srv" id="sv0"></span><b id="sc0">0</b></div>
+      <div class="mid"><span id="scoring">SIDE-OUT · TO 11</span></div>
+      <div class="tm r" id="tm1"><b id="sc1">0</b><span class="srv" id="sv1"></span><span class="nm" id="nm1">CPU</span></div>
+    </div>
+    <div id="hudBtns">
+      <button id="bPause" class="rbtn" type="button" aria-label="Pause">&#9208;</button>
+      <button id="bTaunt" class="rbtn" type="button" aria-label="Taunt">😎</button>
+    </div>
+    <div id="assistTag">🛟 ASSIST</div>
+    <div id="call"></div>
+    <div id="msg"></div>
+    <div id="hint"></div>
+    <div id="kWarn">🚫 KITCHEN!</div>
+    <div id="perfect"></div>
+    <div id="drill" class="hidden"></div>
+    <div id="joy" class="hidden"><div id="joyBase"><div id="joyKnob"></div></div></div>
+    <div id="shots">
+      <button class="shot" data-s="dink" type="button"><i>🪶</i>DINK</button>
+      <button class="shot" data-s="drive" type="button"><i>💨</i>DRIVE</button>
+      <button class="shot" data-s="lob" type="button"><i>🌈</i>LOB</button>
+      <button class="shot" data-s="smash" type="button" id="bSmash"><i>💥</i>SMASH</button>
+    </div>
+    <div id="swipeHelp">SWIPE UP to hit · TAP for auto</div>
+    <div id="replayBar" class="hidden">⭐ GREAT POINT · REPLAY <small>tap to skip</small></div>
+    <div id="taunts" class="hidden"></div>
+  </div>
+
+  <div id="toasts"></div>
+  <div id="pnl" class="screen top hidden"><div id="pnlCard" class="card"></div></div>
+
+  <div id="scrTitle" class="screen">
+    <div class="card title">
+      <div class="logo"><span class="lg1">GROK</span><span class="lg2">PICKLEBALL</span></div>
+      <div class="coins">🪙 <b id="coinN">0</b></div>
+      <div class="row prof">
+        <input id="nameIn" maxlength="12" placeholder="Your name" autocomplete="off" />
+        <div id="colorRow" class="swatches"></div>
+      </div>
+      <div class="grid2">
+        <button id="bQuick" class="btn primary big" type="button">🏓 QUICK MATCH</button>
+        <button id="bCareer" class="btn gold" type="button">🏆 PICKLE CUP</button>
+        <button id="bMini" class="btn blue" type="button">🎯 MINI GAMES</button>
+        <button id="bOnline" class="btn pink" type="button">🤝 PLAY WITH FRIENDS</button>
+        <button id="bTut" class="btn green" type="button">📘 TUTORIAL</button>
+        <button id="bShop" class="btn purple" type="button">🎒 LOCKER</button>
+      </div>
+      <div class="btnrow"><button id="bSettings" class="btn alt small" type="button">⚙️ SETTINGS</button><button id="bHow" class="btn alt small" type="button">❓ RULES</button></div>
+      <a id="arcadeLink" class="foot link" href="https://lizethbran13-cmyk.github.io/grok-arcade/">&larr; Grok Arcade</a>
+    </div>
+  </div>
+
+  <div id="loading" class="screen hidden"><div class="card"><h2>Setting up the court&hellip;</h2><div class="spin"></div></div></div>
+
+  <script src="three.min.js"></script>
+  <script src="peerjs.min.js"></script>
+  <script src="grok-net.js"></script>
+  <script src="js/util.js?v=1"></script>
+  <script src="js/data.js?v=1"></script>
+  <script src="js/physics.js?v=1"></script>
+  <script src="js/rules.js?v=1"></script>
+  <script src="js/match.js?v=1"></script>
+  <script src="js/models.js?v=1"></script>
+  <script src="js/courts.js?v=1"></script>
+  <script src="js/audio.js?v=1"></script>
+  <script src="js/view.js?v=1"></script>
+  <script src="js/ui.js?v=1"></script>
+  <script src="js/modes.js?v=1"></script>
+  <script src="js/net.js?v=1"></script>
+  <script src="js/game.js?v=1"></script>
+  <script>PB.G.init();</script>
+</body>
+</html>

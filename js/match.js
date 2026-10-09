@@ -157,7 +157,7 @@
     return d <= this.reach(p) && b.y > 0.06 && b.y < top;
   };
   M.tryHit = function (p) {
-    if (p.swingT < 0.18) return;
+    if (p.swingT < 0.18 || p.noHit) return;
     if (!this.canHit(p)) return;
     const b = this.ball, r = this.rally, volley = r.bounces === 0;
     if (p.ctrl === 'ai') {
@@ -267,6 +267,17 @@
     if (this.hooks.hit) this.hooks.hit(this, p, type, volley);
   };
 
+  // practice / drills: a ball machine (or a feeder player) sends a shot; rally.hits preset so the bounce rules fit the drill
+  M.feed = function (o) {
+    const b = this.ball, g = this.game; this.rally = R.newRally(g); this.rally.hits = o.hits == null ? 3 : o.hits; this.rally.lastTeam = o.team; this.rally.lastPlayer = o.p == null ? -1 : o.p;
+    b.x = o.x; b.y = o.y || 0.9; b.z = o.z; const v = Ph.solve(b, o.tx, o.tz, o.vh || 8, o.s == null ? 0.3 : o.s, 0, o.clear == null ? 0.2 : o.clear, o.minApex || 0);
+    Object.assign(b, { vx: v.vx, vy: v.vy, vz: v.vz, s: o.s == null ? 0.3 : o.s, sd: 0, live: true, netDead: false, cord: false });
+    if (o.p != null) { const fp = this.players[o.p]; fp.swingT = 0; fp.swingType = o.type || 'drive'; }
+    this.players.forEach((p) => { p.plan = null; p.planHit = -1; });
+    this.phase = 'rally'; this.phaseT = 0; this.lastHitT = this.t; this.rallyStartT = this.t;
+    this.emit('hit', { p: o.p == null ? -1 : o.p, type: o.type || 'drive', pow: 0.5, speed: Math.hypot(v.vx, v.vy, v.vz), feed: true });
+  };
+
   /* ---------- AI + auto-move brain ---------- */
   M.auto = function (p) { return p.ctrl === 'ai' || p.assist; };
   M.think = function (dt) {
@@ -348,9 +359,11 @@
     this.players.forEach((p) => {
       let tx = p.x, tz = p.z, spd = this.speedOf(p);
       if (frozen) { const sp = this.servePos(p); tx = sp.x; tz = sp.z; }
-      else if (this.auto(p) && p.tgt) { tx = p.tgt.x; tz = p.tgt.z; if (p.reactT > 0 && p.ctrl === 'ai' && p.team !== this.rally.lastTeam) { tx = p.x; tz = p.z; } }
+      else if (this.auto(p) && p.tgt && !p.home) { tx = p.tgt.x; tz = p.tgt.z; if (p.reactT > 0 && p.ctrl === 'ai' && p.team !== this.rally.lastTeam) { tx = p.x; tz = p.z; } }
       let wantVx, wantVz;
-      if (!frozen && !this.auto(p)) { // manual joystick: mx right, mz forward (toward the net) from the player's view
+      const steer = p.ctrl !== 'ai' && (Math.abs(p.input.mx) + Math.abs(p.input.mz) > 0.15);
+      if (p.home && !frozen) { tx = p.home.x; tz = p.home.z; }
+      if (!frozen && (!this.auto(p) || steer)) { // manual joystick (assist: steering overrides auto-move): mx right, mz forward (toward the net) from the player's view
         const fx = p.team === 0 ? 1 : -1; wantVx = p.input.mx * fx * spd; wantVz = -p.input.mz * fx * spd;
       } else {
         const dx = tx - p.x, dz = tz - p.z, d = Math.hypot(dx, dz);
