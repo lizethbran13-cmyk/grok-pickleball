@@ -168,7 +168,8 @@
   UI.board = function (st, names, me) {
     const g = st.game; if (!g) return;
     $('sc0').textContent = g.score[0]; $('sc1').textContent = g.score[1];
-    $('nm0').textContent = names[0]; $('nm1').textContent = names[1];
+    const shortN = (n) => { const w = String(n).replace(/^CPU\s+/i, '').replace(/[’']/g, '').split(/\s+/); const a = w[0] || n; return a.length > 8 ? a.slice(0, 7) + '.' : a; };
+    [0, 1].forEach((i) => { const el = $('nm' + i), parts = String(names[i] || '').split(' + '); el.classList.toggle('two', parts.length > 1); if (parts.length > 1) el.innerHTML = parts.map((q) => U.esc(shortN(q))).join('<br>'); else el.textContent = String(names[i] || '').length > 12 ? shortN(names[i]) : names[i]; });
     const dots = g.doubles && g.scoring === 'sideout' ? g.sn : 1;
     $('sv0').innerHTML = g.st === 0 ? '<i></i>'.repeat(dots) : ''; $('sv1').innerHTML = g.st === 1 ? '<i></i>'.repeat(dots) : '';
     $('scoring').textContent = (g.scoring === 'rally' ? 'RALLY' : 'SIDE-OUT') + ' · TO ' + g.to;

@@ -219,9 +219,8 @@
     [[7.5, 14], [9.2, 14]].forEach(([x, z]) => { b.box(0.8, 0.12, 1.8, 0.05, '#f9fafb', x, 0.35, z, -0.1); b.box(0.8, 0.7, 0.12, 0.05, '#f9fafb', x, 0.65, z - 0.9, -0.6); });
     // string lights criss-crossing over the court + poles
     const poles = [[-7, -12], [7, -12], [-7, 0], [7, 0], [-7, 12], [7, 12]]; poles.forEach(([x, z]) => b.cyl(0.07, 0.09, 5.2, '#1f2937', x, 2.6, z, 0, 0, 0, 'gloss'));
-    const cols = ['#ffd27a', '#fff3c4', '#ffb86b'];
-    stringLights(g2, -7, -12, 7, -12, 5.2, 0.6, 16, cols); stringLights(g2, -7, 0, 7, 0, 5.2, 0.6, 16, cols); stringLights(g2, -7, 12, 7, 12, 5.2, 0.6, 16, cols);
-    stringLights(g2, -7, -12, 7, 0, 5.2, 0.8, 18, cols); stringLights(g2, 7, -12, -7, 0, 5.2, 0.8, 18, cols); stringLights(g2, -7, 0, 7, 12, 5.2, 0.8, 18, cols); stringLights(g2, 7, 0, -7, 12, 5.2, 0.8, 18, cols);
+    const cols = ['#ffb347', '#ff8f3d', '#ffd27a'];   // warm bulbs along the sides only (bulbs over the court looked like balls)
+    stringLights(g2, -7, -12, -7, 0, 5.2, 0.5, 14, cols); stringLights(g2, -7, 0, -7, 12, 5.2, 0.5, 14, cols); stringLights(g2, 7, -12, 7, 0, 5.2, 0.5, 14, cols); stringLights(g2, 7, 0, 7, 12, 5.2, 0.5, 14, cols); stringLights(g2, -7, -12, 7, -12, 5.2, 0.6, 16, cols);
     // floodlights
     [[-8, -8], [8, 8], [-8, 8], [8, -8]].forEach(([x, z]) => { b.cyl(0.1, 0.12, 7, '#334155', x, 3.5, z); b.box(1.2, 0.5, 0.4, 0.1, '#1f2937', x, 7, z, 0, Math.atan2(-x, -z), 0); g2.box(1.0, 0.35, 0.05, 0.02, '#ffffff', x - Math.sign(x) * 0.2, 7, z - Math.sign(z) * 0.2, 0, Math.atan2(-x, -z), 0, 'glow'); });
     const seats = []; bleacher(b, -(D.HW + 4.2), 0, Math.PI / 2, 3, 12, '#a78bfa', seats); bleacher(b, D.HW + 7.2, 2, -Math.PI / 2, 3, 9, '#a78bfa', seats);

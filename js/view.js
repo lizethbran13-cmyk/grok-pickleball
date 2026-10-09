@@ -102,7 +102,7 @@
 
   /* ---------- camera ---------- */
   // side: 0 = behind the near team, 1 = behind the far team
-  V.playCam = function (dt, focusX, side, ballZ, snap) {
+  V.playCam = function (dt, focusX, side, ballZ, snap) { if (V.lockOff) { V.cam.clearViewOffset(); V.lockOff = false; }
     const asp = V.cam.aspect, portrait = asp < 1;
     const vfov = portrait ? 64 : 50; V.cam.fov = U.lerp(V.cam.fov, vfov, snap ? 1 : 0.1);
     const hf = 2 * Math.atan(Math.tan(vfov * Math.PI / 360) * asp), fitW = portrait ? 7.4 : 10.5;
@@ -114,9 +114,9 @@
     if (snap) V.cam.position.copy(want); else V.cam.position.lerp(want, Math.min(1, dt * 4));
     V.lookAt = look; V.cam.lookAt(look); V.cam.updateProjectionMatrix();
   };
-  V.orbitCam = function (dt, r, h, spd, target) { const a = V.t * (spd || 0.12); V.cam.fov = 55; V.cam.position.set(Math.sin(a) * r, h, Math.cos(a) * r); V.cam.lookAt(target || new T.Vector3(0, 0.5, 0)); V.cam.updateProjectionMatrix(); };
-  V.lockerCam = function (m) { const p = m.position; const asp = V.cam.aspect; V.cam.fov = 40; V.cam.position.set(p.x + 0.0, 1.35, p.z + (asp < 1 ? 5.6 : 4.2)); V.cam.lookAt(p.x, asp < 1 ? 1.25 : 1.0, p.z); V.cam.updateProjectionMatrix(); };
-  V.replayCam = function (dt, b, t, side) { const a = Math.sin(t * 0.3) * 0.55, s = side ? -1 : 1, portrait = innerHeight > innerWidth, r = portrait ? 15.5 : 13; const want = new T.Vector3(Math.sin(a) * r * s + b.x * 0.2, portrait ? 8.5 : 6.5, Math.cos(a) * r * s); V.cam.position.lerp(want, Math.min(1, dt * 2)); V.cam.fov = portrait ? 56 : 46; V.cam.lookAt(b.x * 0.3, 0.6, b.z * 0.35); V.cam.updateProjectionMatrix(); };
+  V.orbitCam = function (dt, r, h, spd, target) { if (V.lockOff) { V.cam.clearViewOffset(); V.lockOff = false; } const a = V.t * (spd || 0.12); V.cam.fov = 55; V.cam.position.set(Math.sin(a) * r, h, Math.cos(a) * r); V.cam.lookAt(target || new T.Vector3(0, 0.5, 0)); V.cam.updateProjectionMatrix(); };
+  V.lockerCam = function (m) { const p = m.position; const asp = V.cam.aspect; V.cam.fov = 40; V.cam.position.set(p.x + 0.0, 1.3, p.z + (asp < 1 ? 7.2 : 4.2)); V.cam.lookAt(p.x, 1.0, p.z); if (asp < 1) { const w = innerWidth, h = innerHeight; V.cam.setViewOffset(w, h, 0, h * 0.25, w, h); V.lockOff = true; } V.cam.updateProjectionMatrix(); };
+  V.replayCam = function (dt, b, t, side) { if (V.lockOff) { V.cam.clearViewOffset(); V.lockOff = false; } const a = Math.sin(t * 0.3) * 0.55, s = side ? -1 : 1, portrait = innerHeight > innerWidth, r = portrait ? 15.5 : 13; const want = new T.Vector3(Math.sin(a) * r * s + b.x * 0.2, portrait ? 8.5 : 6.5, Math.cos(a) * r * s); V.cam.position.lerp(want, Math.min(1, dt * 2)); V.cam.fov = portrait ? 56 : 46; V.cam.lookAt(b.x * 0.3, 0.6, b.z * 0.35); V.cam.updateProjectionMatrix(); };
   V.project = function (x, y, z) { const v = new T.Vector3(x, y, z).project(V.cam); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight, vis: v.z < 1 }; };
   V.unproject = function (sx, sy) { // screen -> ground point (y = 0)
     const v = new T.Vector3(sx / innerWidth * 2 - 1, -(sy / innerHeight) * 2 + 1, 0.5).unproject(V.cam); const dir = v.sub(V.cam.position).normalize(); const t = -V.cam.position.y / dir.y; if (t < 0) return null; return { x: V.cam.position.x + dir.x * t, z: V.cam.position.z + dir.z * t }; };

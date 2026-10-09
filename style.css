@@ -116,7 +116,8 @@ input { font-family: inherit; font-weight: 800; font-size: 19px; padding: 10px 1
 .shot.hot { animation: hot .5s infinite alternate; }
 @keyframes hot { to { transform: scale(1.1); box-shadow: 0 0 18px #ffe14d, 0 4px 0 rgba(0,0,0,.28); } }
 .shot:active { transform: scale(.94); }
-#swipeHelp { position: absolute; left: 0; right: 0; bottom: calc(150px + var(--sb)); text-align: center; font-size: 13px; color: rgba(255,255,255,.85); text-shadow: 0 2px 0 rgba(0,0,0,.5); }
+#swipeHelp { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(150px + var(--sb)); white-space: nowrap; text-align: center; font-size: 13px; color: #fff; background: rgba(20,17,45,.72); border: 1.5px solid rgba(255,255,255,.35); border-radius: 999px; padding: 4px 12px; transition: opacity .2s; pointer-events: none; }
+#board .nm.two { font-size: 10.5px; line-height: 1.15; white-space: nowrap; }
 #joy { position: absolute; left: calc(14px + var(--sl)); bottom: calc(18px + var(--sb)); width: 130px; height: 130px; pointer-events: auto; }
 #joyBase { width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,.18); border: 3px solid rgba(255,255,255,.7); position: relative; }
 #joyKnob { position: absolute; left: 39px; top: 39px; width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.9); box-shadow: 0 3px 0 rgba(0,0,0,.25); }
