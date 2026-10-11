@@ -68,7 +68,7 @@
       if (sm.armed[p.team]) { superShot(p); return; }
       sm.sup = null;
       // pop-ups! the other side gets a juicy high ball to smash
-      if (type !== 'smash' && mm.rally.hits >= 3 && mm.rnd() < (p.ctrl === 'ai' ? 0.34 : 0.24)) {
+      if (type !== 'smash' && mm.rally.hits >= 2 && mm.rnd() < (p.ctrl === 'ai' ? 0.42 : 0.3)) {
         const b = mm.ball, dir = mm.dirZ(p.team), tz = dir * (2.7 + mm.rnd() * 1.8), tx = U.clamp(b.x * 0.3 + (mm.rnd() - 0.5) * 2.6, -D.HW + 0.6, D.HW - 0.6);
         const v = Ph.solve({ x: b.x, y: b.y, z: b.z }, tx, tz, 5.2, 0.2, 0, 2.2, 3.7); Object.assign(b, { vx: v.vx, vy: v.vy, vz: v.vz, s: 0.2, sd: 0 });
         mm.emit('pop', { team: 1 - p.team });
@@ -82,10 +82,17 @@
       let tx = open, tz = dir * (D.HL - 1.1), vh = 15, s = 0.6, clear = 0.25, minApex = 0, curve = 0;
       if (k === 'rocket') { vh = 23; s = 0.1; clear = 0.3; tz = dir * (D.HL - 1.3); }
       else if (k === 'giant') { vh = 9; clear = 1.2; minApex = 2.4; tz = dir * (D.HL - 2.2); tx = U.clamp(opx * 0.4, -D.HW + 1, D.HW - 1); }
-      else if (k === 'banana') { curve = Math.sign(open) * 7; tx = open - curve * 0.33; vh = 12; }
+      else if (k === 'banana') { curve = Math.sign(open) * 5; vh = 12; }
       else if (k === 'zap') { vh = 16; }
       else if (k === 'split') { vh = 14; }
-      const v = Ph.solve({ x: b.x, y: Math.max(0.3, b.y), z: b.z }, tx, tz, vh, s, 0, clear, minApex);
+      let v = Ph.solve({ x: b.x, y: Math.max(0.3, b.y), z: b.z }, tx, tz, vh, s, 0, clear, minApex);
+      if (k === 'banana') { // pre-aim against the curve: fly a copy of the ball (with the curve) and correct the aim until it lands in the corner
+        const from = { x: b.x, y: Math.max(0.3, b.y), z: b.z }; let aim = open - curve * 0.25;
+        for (let it = 0; it < 6; it++) { const c = Ph.copy(Object.assign({}, b, from, v, { s, sd: 0 })); let land = null;
+          for (let t = 0; t < 4 && !land; t += 1 / 120) { c.vx += curve / 120; const e = Ph.step(c, 1 / 120); if (e && e.t === 'bounce') land = c; if (c.y <= 0.0 && !land) land = c; }
+          if (!land) break; const err = open - land.x; if (Math.abs(err) < 0.12) break; aim += err; v = Ph.solve(from, aim, tz, vh, s, 0, clear, minApex); }
+      }
+
       Object.assign(b, { y: Math.max(0.3, b.y), vx: v.vx, vy: v.vy, vz: v.vz, s, sd: 0 });
       sm.sup = { kind: k, team: p.team, t: 0, bounced: 0, crossed: 0, curve, fresh: 1 };
       if (k === 'freeze') sm.frozen[op] = 2.2;
@@ -114,14 +121,14 @@
         sp.t += dt; const op = 1 - sp.team;
         if (!sp.bounced) {
           if (sp.kind === 'banana') b.vx += sp.curve * dt;
-          if (sp.kind === 'rocket') teamP(op).forEach((p) => { p.noHit = true; });
+          if (sp.kind === 'rocket' || sp.kind === 'giant') teamP(op).forEach((p) => { p.noHit = true; });
           if (!sp.crossed && R.teamOfZ(b.z) === op) { sp.crossed = 1; if (sp.kind === 'zap') { sm.frozen[op] = Math.max(sm.frozen[op], 1.1); this.emit('zap', { team: op }); } }
         }
-        if (sp.kind === 'split' && sp.fresh) { sp.fresh = 0; teamP(op).forEach((p) => { p.planHit = this.rally.hits; p.reactT = 1.0; p.plan = null; }); }
+        if ((sp.kind === 'split' || sp.kind === 'banana') && sp.fresh) { sp.fresh = 0; teamP(op).forEach((p) => { p.planHit = this.rally.hits; p.reactT = sp.kind === 'split' ? 1.0 : 0.75; p.plan = null; }); }
       }
       baseTick.call(this, dt);
       hold.forEach(([p, x, z]) => { p.x = x; p.z = z; p.vx = p.vz = 0; });
-      if (sp && sp.kind === 'rocket' && (sp.bounced || this.phase !== 'rally')) teamP(1 - sp.team).forEach((p) => { if (!(sm.frozen[p.team] > 0)) p.noHit = false; });
+      if (sp && (sp.kind === 'rocket' && (sp.bounced || this.phase !== 'rally') || sp.kind === 'giant' && this.phase !== 'rally')) teamP(1 - sp.team).forEach((p) => { if (!(sm.frozen[p.team] > 0)) p.noHit = false; });
     };
     m.endRally = function (w, why, f) {
       if (this.phase !== 'rally') return;
