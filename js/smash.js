@@ -82,7 +82,7 @@
       let tx = open, tz = dir * (D.HL - 1.1), vh = 15, s = 0.6, clear = 0.25, minApex = 0, curve = 0;
       if (k === 'rocket') { vh = 23; s = 0.1; clear = 0.3; tz = dir * (D.HL - 1.3); }
       else if (k === 'giant') { vh = 9; clear = 1.2; minApex = 2.4; tz = dir * (D.HL - 2.2); tx = U.clamp(opx * 0.4, -D.HW + 1, D.HW - 1); }
-      else if (k === 'banana') { curve = Math.sign(open) * 5; vh = 12; }
+      else if (k === 'banana') { curve = Math.sign(open) * 6; vh = 15.5; s = 0.3; }
       else if (k === 'zap') { vh = 16; }
       else if (k === 'split') { vh = 14; }
       let v = Ph.solve({ x: b.x, y: Math.max(0.3, b.y), z: b.z }, tx, tz, vh, s, 0, clear, minApex);
@@ -122,9 +122,9 @@
         if (!sp.bounced) {
           if (sp.kind === 'banana') b.vx += sp.curve * dt;
           if (sp.kind === 'rocket' || sp.kind === 'giant') teamP(op).forEach((p) => { p.noHit = true; });
-          if (!sp.crossed && R.teamOfZ(b.z) === op) { sp.crossed = 1; if (sp.kind === 'zap') { sm.frozen[op] = Math.max(sm.frozen[op], 1.1); this.emit('zap', { team: op }); } }
+          if (!sp.crossed && R.teamOfZ(b.z) === op) { sp.crossed = 1; if (sp.kind === 'zap') { sm.frozen[op] = Math.max(sm.frozen[op], 1.1); this.emit('zap', { team: op }); } if (sp.kind === 'banana') { sm.frozen[op] = Math.max(sm.frozen[op], 0.75); this.emit('slip', { team: op }); } }
         }
-        if ((sp.kind === 'split' || sp.kind === 'banana') && sp.fresh) { sp.fresh = 0; teamP(op).forEach((p) => { p.planHit = this.rally.hits; p.reactT = sp.kind === 'split' ? 1.0 : 0.75; p.plan = null; }); }
+        if ((sp.kind === 'split' || sp.kind === 'banana') && sp.fresh) { sp.fresh = 0; teamP(op).forEach((p) => { p.planHit = this.rally.hits; p.reactT = sp.kind === 'split' ? 1.0 : 0.9; p.plan = null; }); }
       }
       baseTick.call(this, dt);
       hold.forEach(([p, x, z]) => { p.x = x; p.z = z; p.vx = p.vz = 0; });
@@ -167,6 +167,7 @@
     if (e.t === 'boom') { PB.Snd.fx('smash'); v.shake(0.7); v.burst(e.x, 0.2, e.z, '#ff5a1a', 40, 8); v.burst(e.x, 0.2, e.z, '#ffe14d', 30, 6); v.burst(e.x, 0.4, e.z, '#57534e', 20, 3); return true; }
     if (e.t === 'boing') { PB.Snd.fx('bounce', 3); v.burst(e.x, 0.1, e.z, '#f97316', 18, 4); return true; }
     if (e.t === 'zap') { PB.Snd.fx('smash'); st.players.forEach((p) => { if (p.team === e.team) v.burst(p.x, 1.2, p.z, '#fde047', 24, 5); }); if (e.team === myT) u.hint('ZAPPED! \u26A1', 1000); return true; }
+    if (e.t === 'slip') { PB.Snd.fx('bounce', 2); st.players.forEach((p) => { if (p.team === e.team) v.burst(p.x, 0.2, p.z, '#ffe14d', 18, 3); }); if (e.team === myT) u.hint('SLIPPED ON A BANANA! \uD83C\uDF4C', 1000); else { const op = st.players.find((p) => p.team === e.team); if (op) g.bubble(op.i, 'Whoa! \uD83C\uDF4C', 1.2); } return true; }
     if (e.t === 'smpt') { u.perfect('+' + e.pts + ' ' + e.tag); return true; }
     return false;
   };
@@ -210,7 +211,7 @@
     const dv = live && sp.kind === 'split'; fx.decoys.forEach((d, i) => { d.visible = !!dv; if (dv) { const s = (i ? 1 : -1) * Math.min(1.8, sp.t * 2.4); d.position.set(b.x + s, b.y + Math.sin(sp.t * 9 + i) * 0.15, b.z); d.rotation.x += dt * 14; } });
     fx.bolt.visible = !!(live && sp.kind === 'zap'); if (fx.bolt.visible) { const a = fx.bolt.geometry.attributes.position; for (let i = 0; i < 10; i++) { const k = i / 9; a.setXYZ(i, b.x - b.vx * k * 0.12 + (i && i < 9 ? (Math.random() - 0.5) * 0.35 : 0), b.y - b.vy * k * 0.12 + (i && i < 9 ? (Math.random() - 0.5) * 0.35 : 0), b.z - b.vz * k * 0.12); } a.needsUpdate = true; }
     // ice blocks on frozen players, aura rings on charged ones
-    st.players.forEach((p, i) => { const ice = fx.ice[i], au = fx.aura[i]; if (!ice) return; const fr = sm.frozen[p.team] > 0; ice.visible = fr; if (fr) { ice.position.set(p.x, 1.05, p.z); ice.rotation.y = 0.3; ice.material.color.set(sp && sp.kind === 'zap' ? '#fef08a' : '#bae6fd'); ice.material.emissive.set(sp && sp.kind === 'zap' ? '#facc15' : '#38bdf8'); }
+    st.players.forEach((p, i) => { const ice = fx.ice[i], au = fx.aura[i]; if (!ice) return; const fr = sm.frozen[p.team] > 0 && !(sp && sp.kind === 'banana'); ice.visible = fr; if (fr) { ice.position.set(p.x, 1.05, p.z); ice.rotation.y = 0.3; ice.material.color.set(sp && sp.kind === 'zap' ? '#fef08a' : '#bae6fd'); ice.material.emissive.set(sp && sp.kind === 'zap' ? '#facc15' : '#38bdf8'); }
       const full = sm.en[p.team] >= 100; au.visible = full; if (full) { au.position.set(p.x, 0.04, p.z); au.scale.setScalar(1 + Math.sin(t * 8) * 0.12); au.material.color.set(sm.armed[p.team] ? '#ff4fd8' : D.smasher(sm.chars[p.team]).col); } });
   };
 })();
