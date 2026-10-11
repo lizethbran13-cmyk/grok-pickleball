@@ -75,7 +75,7 @@
   /* ---------- starting (host) ---------- */
   N.start = function () {
     const room = N.room; if (!room || !room.isHost) return; const ps = room.players(); if (ps.length < 2) return;
-    const plan = N.plan(ps.map((p) => p.pid), N.cfg.team);
+    const plan = N.plan(ps.map((p) => p.pid), N.cfg.team, PB.DLC.on() ? N.cfg.mode : 'normal');
     const slots = plan.slots.map((pid) => pid ? { pid, smc: (N.looks[pid] && N.looks[pid].smc) || 'rita', name: (N.looks[pid] && N.looks[pid].name) || (room.player(pid) || {}).name || 'Friend', look: (N.looks[pid] && N.looks[pid].look) || G().aiLook(7) } : null);
     const cfg = { doubles: plan.doubles, smash: !!plan.smash && PB.DLC.on(), diff: N.cfg.diff, court: N.cfg.court, scoring: plan.smash ? 'rally' : N.cfg.scoring, to: plan.smash ? 15 : N.cfg.to, seed: (Math.random() * 1e9) | 0, ai: [G().aiLook(31), G().aiLook(47)] };
     N.lastStart = { cfg, slots };

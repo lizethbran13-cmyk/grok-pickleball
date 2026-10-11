@@ -147,7 +147,7 @@ input { font-family: inherit; font-weight: 800; font-size: 19px; padding: 10px 1
 .smChars button small { font-size: 9.5px; font-weight: 800; color: var(--c); letter-spacing: .3px; }
 .smChars button.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 18%, #fff); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 35%, transparent); transform: translateY(-1px); }
 .smDesc { min-height: 2.6em; }
-#smHud { position: absolute; top: calc(66px + var(--st)); left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: none; }
+#smHud { position: absolute; top: calc(98px + var(--st)); left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: none; }
 #smHud.hidden { display: none; }
 .smBar { display: flex; align-items: center; gap: 4px; background: rgba(15,12,40,.72); border: 2px solid #fff; border-radius: 14px; padding: 2px 7px; }
 .smBar.t1 { flex-direction: row-reverse; }
@@ -169,4 +169,4 @@ input { font-family: inherit; font-weight: 800; font-size: 19px; padding: 10px 1
 #bSuper.armed { box-shadow: 0 0 22px #ff4fd8; border-color: #ff4fd8; }
 #bSuper.armed #bSupF { background: linear-gradient(0deg,#e11d48,#ff4fd8); }
 @keyframes smGlow { from { transform: scale(1); box-shadow: 0 0 6px #ffe14d; } to { transform: scale(1.08); box-shadow: 0 0 24px #ff4fd8; } }
-@media (orientation: portrait) { #bSuper { right: calc(12px + var(--sr)); bottom: calc(150px + var(--sb)); width: 74px; height: 74px; } #smHud { top: calc(62px + var(--st)); } .smBar .tr { width: 64px; } }
+@media (orientation: portrait) { #bSuper { right: calc(12px + var(--sr)); bottom: calc(150px + var(--sb)); width: 74px; height: 74px; } #smHud { top: calc(98px + var(--st)); } .smBar .tr { width: 64px; } }
