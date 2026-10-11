@@ -134,3 +134,39 @@ input { font-family: inherit; font-weight: 800; font-size: 19px; padding: 10px 1
 .toast.bad { border-color: #fb7185; }
 @keyframes tin { from { opacity: 0; transform: translateY(-8px); } }
 @media (min-width: 800px) and (min-height: 500px) { .shot { width: 86px; height: 66px; font-size: 14px; } #board .tm { min-width: 150px; } #board .nm { font-size: 14px; max-width: 100px; } }
+
+/* ---------- PICKLE SMASH EXPANSION (DLC) ---------- */
+.smashBtn { position: relative; background: linear-gradient(180deg,#ff7a3d,#e11d48) !important; }
+.smashBtn small { font-size: 11px; background: #ffe14d; color: #3a2400; border-radius: 8px; padding: 2px 7px; margin-left: 6px; vertical-align: middle; }
+.btn.dlcb { background: linear-gradient(180deg,#a78bfa,#6d28d9); font-size: 13px; }
+.dlcTag { display: inline-block; background: #ffe14d; color: #3a2400; font-weight: 900; border-radius: 10px; padding: 3px 10px; font-size: 13px; margin-bottom: 4px; }
+.smChars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 6px 0; }
+.smChars button { border: 3px solid #e5e7eb; border-radius: 16px; background: #fff; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; gap: 1px; color: #1f2937; cursor: pointer; }
+.smChars button i { font-style: normal; font-size: 26px; line-height: 1.1; }
+.smChars button b { font-size: 12.5px; }
+.smChars button small { font-size: 9.5px; font-weight: 800; color: var(--c); letter-spacing: .3px; }
+.smChars button.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 18%, #fff); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 35%, transparent); transform: translateY(-1px); }
+.smDesc { min-height: 2.6em; }
+#smHud { position: absolute; top: calc(66px + var(--st)); left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: none; }
+#smHud.hidden { display: none; }
+.smBar { display: flex; align-items: center; gap: 4px; background: rgba(15,12,40,.72); border: 2px solid #fff; border-radius: 14px; padding: 2px 7px; }
+.smBar.t1 { flex-direction: row-reverse; }
+.smBar .ic { font-size: 16px; }
+.smBar .tr { width: 84px; height: 10px; border-radius: 6px; background: rgba(255,255,255,.18); overflow: hidden; }
+.smBar.t1 .tr { transform: scaleX(-1); }
+.smBar .tr i { display: block; height: 100%; width: 0; border-radius: 6px; transition: width .2s; }
+.smBar.full .tr i { background: linear-gradient(90deg,#ffe14d,#ff4fd8,#3ff0ff) !important; animation: smPulse .4s infinite alternate; }
+.smBar.armed { border-color: #ff4fd8; box-shadow: 0 0 14px #ff4fd8; }
+.smBar .ct { font-size: 11px; font-weight: 800; color: #ffe14d; min-width: 26px; text-align: center; }
+@keyframes smPulse { to { filter: brightness(1.4); } }
+#bSuper { position: absolute; right: calc(172px + var(--sr)); bottom: calc(16px + var(--sb)); width: 82px; height: 82px; border-radius: 50%; border: 3px solid #fff; background: #3b2a6b; color: #fff; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 0 rgba(0,0,0,.3); pointer-events: auto; touch-action: none; }
+#bSuper.hidden { display: none; }
+#bSuper i { font-style: normal; font-size: 26px; line-height: 1; position: relative; z-index: 1; }
+#bSuper b { font-size: 11px; font-weight: 900; letter-spacing: .5px; position: relative; z-index: 1; text-shadow: 0 1px 0 rgba(0,0,0,.4); }
+#bSupF { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(0deg,#7c3aed,#c084fc); transition: height .2s; }
+#bSuper.ready { animation: smGlow .45s infinite alternate; }
+#bSuper.ready #bSupF { background: linear-gradient(0deg,#ff4fd8,#ffe14d); }
+#bSuper.armed { box-shadow: 0 0 22px #ff4fd8; border-color: #ff4fd8; }
+#bSuper.armed #bSupF { background: linear-gradient(0deg,#e11d48,#ff4fd8); }
+@keyframes smGlow { from { transform: scale(1); box-shadow: 0 0 6px #ffe14d; } to { transform: scale(1.08); box-shadow: 0 0 24px #ff4fd8; } }
+@media (orientation: portrait) { #bSuper { right: calc(12px + var(--sr)); bottom: calc(150px + var(--sb)); width: 74px; height: 74px; } #smHud { top: calc(62px + var(--st)); } .smBar .tr { width: 64px; } }

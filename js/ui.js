@@ -37,6 +37,7 @@
       '<li><b>The Kitchen</b> is the zone next to the net. You can never volley while standing in it (or on its line), and you can\u2019t step in right after a volley. Once the ball bounces in the kitchen you can go in and hit it.</li>' +
       '<li><b>Scoring (side-out):</b> only the serving side scores. In doubles the score is called as <b>your score - their score - server number</b>, like "4 - 2 - 1". Games go to 11, win by 2. You can switch to rally scoring in the match setup.</li>' +
       '<li><b>Faults:</b> hitting it out, into the net, volleying in the kitchen or breaking the two-bounce rule loses the rally.</li>' +
+      '<li><b>💥 Smash Mode (Pickle Smash Expansion):</b> pop-ups happen all the time, a smash winner is worth 2 points and a super smash 3. Hits, smashes and lost points fill your energy bar: when it\u2019s full press <b>SUPER</b> (or E) and your next hit is your Smasher\u2019s super.</li>' +
       '<li><b>Desktop:</b> drag the mouse up to swipe, click to tap, WASD/arrows to move, Space = auto shot, J K L I = dink drive lob smash, T = taunt, Esc = pause.</li></ul>' +
       '<div class="btnrow"><button class="btn primary" data-close>GOT IT</button></div>');
   };
@@ -77,7 +78,7 @@
       '<div class="btnrow"><button class="btn alt" data-close>BACK</button><button class="btn primary big" id="bGo">PLAY!</button></div>', (c) => {
       UI.seg(c, 'sMode', o.mode, (v) => { o.mode = v; });
       UI.seg(c, 'sDiff', o.diff, (v) => { o.diff = v; });
-      UI.seg(c, 'sCourt', o.court, (v, lock) => { if (lock) { UI.toast('🔒 Unlock this court in the Locker or the Pickle Cup!', true); return false; } o.court = v; g.previewCourt(v); });
+      UI.seg(c, 'sCourt', o.court, (v, lock) => { if (lock) { if (D.court(v).dlc) PB.Smash.lockedInfo(); else UI.toast('🔒 Unlock this court in the Locker or the Pickle Cup!', true); return false; } o.court = v; g.previewCourt(v); });
       UI.seg(c, 'sScore', o.scoring, (v) => { o.scoring = v; });
       UI.seg(c, 'sTo', String(o.to), (v) => { o.to = +v; });
       c.querySelector('#bGo').addEventListener('click', () => { g.persist(); UI.close(); g.startQuick(); });
@@ -114,12 +115,12 @@
     const g = G(), sv = g.save; tab = tab || 'paddles';
     const tabs = [['paddles', '🏓 Paddles'], ['outfits', '👕 Outfits'], ['look', '🙂 Look'], ['celebs', '🎉 Moves'], ['taunts', '💬 Taunts'], ['courts', '🏟️ Courts']];
     let body = '';
-    const row = (kind, it, icon, name, sub) => { const own = sv.owned[kind].indexOf(it.id) >= 0, on = sv.eq[kind] === it.id; return '<div class="item' + (on ? ' on' : '') + '"><div class="ic">' + icon + '</div><div class="grow"><b>' + esc(name) + '</b><small>' + (sub || '') + '</small></div>' + (own ? (on ? '<span class="badge">EQUIPPED</span>' : '<button class="btn green" data-eq="' + kind + ':' + it.id + '">USE</button>') : '<button class="btn gold" data-buy="' + kind + ':' + it.id + '">🪙 ' + it.price + '</button>') + '</div>'; };
-    if (tab === 'paddles') body = D.PADDLES.map((p) => row('paddles', p, '<span class="sw" style="background:linear-gradient(135deg,' + p.a + ' 55%,' + p.b + ' 56%)"></span>', p.n, p.glow ? '✨ glows' : p.pickle ? '🥒 pickle shaped' : '')).join('');
+    const row = (kind, it, icon, name, sub) => { const own = sv.owned[kind].indexOf(it.id) >= 0, on = sv.eq[kind] === it.id; return '<div class="item' + (on ? ' on' : '') + '"><div class="ic">' + icon + '</div><div class="grow"><b>' + esc(name) + '</b><small>' + (sub || '') + '</small></div>' + (own ? (on ? '<span class="badge">EQUIPPED</span>' : '<button class="btn green" data-eq="' + kind + ':' + it.id + '">USE</button>') : (it.dlc ? '<button class="btn dlcb" data-dlc="1">🔒 DLC</button>' : '<button class="btn gold" data-buy="' + kind + ':' + it.id + '">🪙 ' + it.price + '</button>')) + '</div>'; };
+    if (tab === 'paddles') body = D.PADDLES.map((p) => row('paddles', p, '<span class="sw" style="background:linear-gradient(135deg,' + p.a + ' 55%,' + p.b + ' 56%)"></span>', p.n, p.dlc ? '💥 Pickle Smash Expansion' : p.glow ? '✨ glows' : p.pickle ? '🥒 pickle shaped' : '')).join('');
     else if (tab === 'outfits') body = D.OUTFITS.map((o) => row('outfits', o, '<span class="sw" style="background:linear-gradient(180deg,' + (o.shirt || sv.look.shirt) + ' 60%,' + o.shorts + ' 61%)"></span>', o.n, 'Hat: ' + o.hat)).join('');
     else if (tab === 'celebs') body = D.CELEBS.map((o) => row('celebs', o, o.icon, o.n, 'Plays when you win a point')).join('');
     else if (tab === 'taunts') body = D.TAUNTS.map((o) => row('taunts', o, '💬', o.t, '')).join('');
-    else if (tab === 'courts') body = D.COURTS.map((o) => row('courts', o, o.icon, o.n, o.desc)).join('');
+    else if (tab === 'courts') body = D.COURTS.map((o) => row('courts', o, o.icon, o.n, (o.dlc ? '💥 DLC · ' : '') + o.desc)).join('');
     else body = '<h3>SKIN</h3><div class="swatches" id="lkSkin">' + D.SKINS.map((s, i) => '<button style="background:' + s + '" data-v="' + i + '" class="' + (sv.look.skin === i ? 'on' : '') + '"></button>').join('') + '</div>' +
       '<h3>HAIR</h3><div class="swatches" id="lkHair">' + ['#2d1b0e', '#5b3a1e', '#a0522d', '#f6c344', '#111827', '#e5e7eb', '#ff4fd8', '#3b82f6'].map((s) => '<button style="background:' + s + '" data-v="' + s + '" class="' + (sv.look.hair === s ? 'on' : '') + '"></button>').join('') + '</div>' +
       '<h3>HAIR STYLE</h3>' + segH('lkStyle', [['short', 'SHORT'], ['pony', 'PONYTAIL'], ['bun', 'BUN'], ['long', 'LONG']]) +
@@ -127,6 +128,7 @@
     UI.panel('<h2>🎒 LOCKER <span class="coins">🪙 <b>' + sv.coins + '</b></span></h2><div class="tabs">' + tabs.map((t) => '<button type="button" data-t="' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + '">' + t[1] + '</button>').join('') + '</div><div class="list">' + body + '</div><div class="btnrow"><button class="btn primary" data-close>DONE</button></div>', (c) => {
       c.querySelectorAll('[data-t]').forEach((b) => b.addEventListener('click', () => UI.locker(b.dataset.t)));
       c.querySelectorAll('[data-eq]').forEach((b) => b.addEventListener('click', () => { const [k, id] = b.dataset.eq.split(':'); g.equip(k, id); UI.locker(tab); }));
+      c.querySelectorAll('[data-dlc]').forEach((b) => b.addEventListener('click', () => PB.Smash.lockedInfo()));
       c.querySelectorAll('[data-buy]').forEach((b) => b.addEventListener('click', () => { const [k, id] = b.dataset.buy.split(':'); if (g.buy(k, id)) UI.locker(tab); }));
       const sw = (id, key, num) => { const el = c.querySelector('#' + id); if (!el) return; el.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { sv.look[key] = num ? +b.dataset.v : b.dataset.v; g.persist(); g.refreshLocker(); UI.locker(tab); })); };
       sw('lkSkin', 'skin', true); sw('lkHair', 'hair'); sw('lkShirt', 'shirt');
@@ -172,7 +174,7 @@
     [0, 1].forEach((i) => { const el = $('nm' + i), parts = String(names[i] || '').split(' + '); el.classList.toggle('two', parts.length > 1); if (parts.length > 1) el.innerHTML = parts.map((q) => U.esc(shortN(q))).join('<br>'); else el.textContent = String(names[i] || '').length > 12 ? shortN(names[i]) : names[i]; });
     const dots = g.doubles && g.scoring === 'sideout' ? g.sn : 1;
     $('sv0').innerHTML = g.st === 0 ? '<i></i>'.repeat(dots) : ''; $('sv1').innerHTML = g.st === 1 ? '<i></i>'.repeat(dots) : '';
-    $('scoring').textContent = (g.scoring === 'rally' ? 'RALLY' : 'SIDE-OUT') + ' · TO ' + g.to;
+    $('scoring').textContent = (st.sm ? '💥 SMASH' : g.scoring === 'rally' ? 'RALLY' : 'SIDE-OUT') + ' · TO ' + g.to;
     void me;
   };
 })();

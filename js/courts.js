@@ -275,6 +275,7 @@
     return { sun: { col: '#ffd6f5', pos: [5, 20, 12], k: 0.7 }, hemi: ['#b38bff', '#3a1047', 0.85], fog: ['#1a0730', 70, 320], bg: '#120022', night: true, spots: [[-7, 8, -9], [7, 8, 9]] };
   };
 
+  C.BUILD = BUILD; C.H = { courtCore, bleacher, tree, bush, lamp, fence, chainLink, clouds, skyDome, ground, crowdOn, stringLights, att, rcv }; // Pickle Smash Expansion adds venues
   C.build = function (id) {
     const c = D.court(id), root = new T.Group(), rnd = U.rng(id.length * 977 + 13);
     const env = BUILD[c.id](root, c, rnd);

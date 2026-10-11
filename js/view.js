@@ -96,6 +96,7 @@
     if (ud.crowd) ud.crowd.userData.groups.forEach((g, i) => { const ch = V.cheerT > 0 ? 1 : 0; g.position.y = ch ? Math.max(0, Math.sin(V.t * 10 + i * 2.1)) * 0.22 : Math.max(0, Math.sin(V.t * 1.5 + i * 2)) * 0.02; });
     if (ud.ocean && V.quality !== 'low') { const g = ud.ocean.geometry, p = g.attributes.position, base = ud.ocean.userData.base; for (let i = 0; i < p.count; i++) { const x = base[i * 3], z = base[i * 3 + 2]; p.array[i * 3 + 1] = base[i * 3 + 1] + Math.sin(x * 0.08 + V.t * 1.3) * 0.35 + Math.sin(z * 0.11 + V.t * 0.9) * 0.3; } p.needsUpdate = true; if ((V._on = (V._on || 0) + 1) % 10 === 0) g.computeVertexNormals(); }
     if (ud.beams) ud.beams.forEach((m) => { const ph = m.userData.ph + V.t * 0.6; m.rotation.x = 0.5 + Math.sin(ph) * 0.35; m.rotation.z = Math.cos(ph * 0.8) * 0.5; });
+    if (ud.anim) ud.anim(V.t, dt);
     if (ud.clouds) ud.clouds.position.x = Math.sin(V.t * 0.02) * 30;
     if (ud.gulls) { ud.gulls.position.x = Math.sin(V.t * 0.1) * 40; ud.gulls.position.y = Math.sin(V.t * 0.7) * 1.5; }
   }

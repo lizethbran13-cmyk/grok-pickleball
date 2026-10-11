@@ -12,9 +12,11 @@
     career: { beaten: 0 }, best: {}, stats: { matches: 0, wins: 0, points: 0, longest: 0 }, tutorialDone: false }; }
   function load() {
     let s = null; try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { s = null; }
-    const d = defSave(); if (!s || typeof s !== 'object') return d;
+    const d = defSave(); if (!s || typeof s !== 'object') s = defSave();
     for (const k in d) if (s[k] == null || typeof s[k] !== typeof d[k] || Array.isArray(d[k]) !== Array.isArray(s[k])) s[k] = d[k];
     for (const k in d.owned) { if (!Array.isArray(s.owned[k])) s.owned[k] = d.owned[k]; d.owned[k].forEach((id) => { if (s.owned[k].indexOf(id) < 0) s.owned[k].push(id); }); }
+    // Pickle Smash Expansion (DLC) paddles + venues: owned while the arcade unlock key is present
+    const dl = PB.DLC && PB.DLC.mine(); [['paddles', D.PADDLES], ['courts', D.COURTS]].forEach(([k, list]) => list.forEach((it) => { if (!it.dlc) return; const i = s.owned[k].indexOf(it.id); if (dl && i < 0) s.owned[k].push(it.id); else if (!dl && i >= 0) s.owned[k].splice(i, 1); }));
     for (const k in d.eq) if (typeof s.eq[k] !== 'string' || s.owned[k].indexOf(s.eq[k]) < 0) s.eq[k] = d.eq[k];
     for (const k in d.opts) if (s.opts[k] == null) s.opts[k] = d.opts[k];
     if (!D.DIFF[s.opts.diff]) s.opts.diff = 'easy'; if (s.owned.courts.indexOf(s.opts.court) < 0) s.opts.court = 'park';
@@ -49,7 +51,7 @@
     const cr = $('colorRow'); GN.COLORS.forEach((c) => { const b = document.createElement('button'); b.type = 'button'; b.style.background = c; if (c === prof.color) b.classList.add('on'); b.addEventListener('click', () => { GN.saveProfile(G.myName(), c); G.save.look.shirt = c; G.persist(); cr.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); Snd.fx('ui'); }); cr.appendChild(b); });
     $('nameIn').addEventListener('change', () => GN.saveProfile(G.myName(), G.myColor()));
     const go = (id, fn) => $(id).addEventListener('click', () => { Snd.unlock(); Snd.fx('ui'); GN.saveProfile(G.myName(), G.myColor()); fn(); });
-    go('bQuick', () => UI.quick()); go('bCareer', () => UI.career()); go('bMini', () => UI.minis()); go('bOnline', () => PB.Net.lobby()); go('bTut', () => PB.Modes.startTutorial()); go('bShop', () => G.openLocker()); go('bSettings', () => UI.settings()); go('bHow', () => UI.rules());
+    go('bQuick', () => UI.quick()); go('bCareer', () => UI.career()); go('bMini', () => UI.minis()); go('bOnline', () => PB.Net.lobby()); go('bTut', () => PB.Modes.startTutorial()); go('bShop', () => G.openLocker()); go('bSettings', () => UI.settings()); go('bHow', () => UI.rules()); go('bSmashMode', () => PB.Smash.menu());
     $('bPause').addEventListener('click', () => { Snd.fx('ui'); G.pauseMenu(); });
     $('bTaunt').addEventListener('click', () => { Snd.fx('ui'); G.toggleTaunts(); });
     document.querySelectorAll('.shot').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); Snd.unlock(); G.shot(b.dataset.s, 0, 0.6); }));
@@ -72,8 +74,9 @@
   G.toTitle = function () {
     G.playing = false; G.paused = false; G.m = null; G.ctrl = null; G.replay = null; G.mirror = null; UI.show('hud', false); UI.show('scrTitle', true); $('drill').classList.add('hidden'); clearBubbles();
     if (PB.Net.room && !PB.Net.inLobby) PB.Net.leave();
-    G.locker = false; G.startDemo(); G.persist();
+    G.locker = false; G.startDemo(); G.persist(); PB.Smash.hide(); G.smashTag();
   };
+  G.smashTag = function () { const t = $('smTag'); if (t) t.textContent = PB.DLC.on() ? 'NEW' : '\uD83D\uDD12 DLC'; };
   G.openLocker = function () { UI.show('scrTitle', false); G.locker = true; G.refreshLocker(); UI.locker(); };
   G.refreshLocker = function () { V.setPlayers([G.myLook()]); G.lockT = 0; };
 
@@ -81,6 +84,7 @@
   const shopList = { paddles: D.PADDLES, outfits: D.OUTFITS, celebs: D.CELEBS, taunts: D.TAUNTS, courts: D.COURTS };
   G.buy = function (kind, id) {
     const it = shopList[kind].find((x) => x.id === id); const s = G.save; if (!it || s.owned[kind].indexOf(id) >= 0) return false;
+    if (it.dlc) { PB.Smash.lockedInfo(); return false; }
     if (s.coins < it.price) { UI.toast('Not enough coins yet - win matches and mini games! 🪙', true); Snd.fx('bad'); return false; }
     s.coins -= it.price; s.owned[kind].push(id); s.eq[kind] = id; G.persist(); Snd.fx('buy'); UI.toast('Unlocked ' + (it.n || it.t) + '! 🎉'); if (kind === 'courts') G.save.opts.court = id; G.refreshLocker(); if (kind === 'courts') V.setCourt(id); return true;
   };
@@ -116,7 +120,7 @@
     G.begin(m, L.court, [G.myName(), L.n], { kind: 'career', cfg: { ladder: i } });
     setTimeout(() => G.bubble(1, L.intro, 3.2), 600);
   };
-  G.again = function () { if (G.kind === 'career') G.startCareer(G.cfg.ladder); else if (G.kind === 'online') PB.Net.rematch(); else G.startQuick(G.cfg); };
+  G.again = function () { if (G.kind === 'smash') PB.Smash.start(G.cfg); else if (G.kind === 'career') G.startCareer(G.cfg.ladder); else if (G.kind === 'online') PB.Net.rematch(); else G.startQuick(G.cfg); };
   G.quit = function () { if (G.kind === 'online') PB.Net.leave(); G.toTitle(); };
 
   /* ---------- assist / graphics ---------- */
@@ -191,6 +195,7 @@
   G.onEvent = function (e) {
     const st = G.state(); if (!st) return;
     if (G.ctrl && G.ctrl.onEvent && G.ctrl.onEvent(e)) return;
+    if (PB.Smash.onEvent(e)) return;
     const shake = G.save.opts.shake !== false;
     if (e.t === 'callout') { const srv = st.players[e.server]; const mine = e.server === G.me; UI.call(e.text, mine ? 'YOUR SERVE' : (srv ? srv.name + ' serves' : '')); Snd.say(e.text); if (mine) UI.hint('Swipe up or tap to SERVE (underhand, into the box across)', 2600); }
     else if (e.t === 'hit') { const b = st.ball; if (e.type === 'smash') { Snd.fx('smash'); if (shake) V.shake(0.28); V.burst(b.x, b.y, b.z, '#ffe14d', 14, 4); V.cheer(0.8); } else if (e.type === 'dink') Snd.fx('dink'); else Snd.fx('pock', e.pow); if (e.type === 'drive' && e.speed > 15) V.burst(b.x, b.y, b.z, '#ffffff', 6, 2);
@@ -227,7 +232,9 @@
       if (win) { const first = s.career.beaten === i; coins = first ? L.reward : Math.round(L.reward * 0.3); if (first) { s.career.beaten = i + 1; if (s.owned.courts.indexOf(L.court) < 0) { s.owned.courts.push(L.court); unlock = D.court(L.court).n + ' court unlocked!'; } if (L.boss && s.owned.paddles.indexOf('gold') < 0) { s.owned.paddles.push('gold'); unlock += (unlock ? ' ' : '') + 'Golden Grok paddle!'; } } line = '“' + L.lose + '”'; if (i + 1 < D.LADDER.length) next = i + 1; else line += ' YOU ARE THE PICKLE CUP CHAMPION! 👑'; }
       else { coins = 10 + myPts * 2; line = '“' + L.win + '”'; } }
     else if (G.kind === 'online') { coins = (win ? 40 : 20) + myPts * 2; }
+    else if (G.kind === 'smash') { const di = D.DIFF_ORDER.indexOf(G.cfg.diff); coins = win ? 45 + di * 20 + myPts * 2 : 12 + myPts * 2; }
     else { const di = D.DIFF_ORDER.indexOf(G.cfg.diff); coins = win ? 35 + di * 20 + myPts * 2 : 10 + myPts * 2; }
+    if (st.sm) { const t = G.side, o2 = 1 - t; line = (line ? line + ' ' : '') + '\uD83D\uDCA5 Smashes: ' + st.sm.smashes[t] + ' vs ' + st.sm.smashes[o2] + ' \u00B7 \u26A1 Supers: ' + st.sm.supers[t] + ' vs ' + st.sm.supers[o2]; }
     G.addCoins(coins); G.persist();
     G.lastResult = { win, score: sc, coins, stats: me.stats, longest: G.longest, line, unlock, next, replay: G.bestClip };
     setTimeout(() => { if (G.playing && G.state() === st) UI.results(G.lastResult); }, 2600);
@@ -304,6 +311,7 @@
     // smash button glows when the ball is high nearby
     $('bSmash').classList.toggle('hot', incoming && b.y > 1.6 && Math.hypot(b.x - me.x, b.z - me.z) < 4);
     V.playCam(dt, me.x, G.side, b.z, false);
+    PB.Smash.draw(st, dt);
   }
   function fpsWatch(dt) {
     if (G.gfx !== 'high' || G.gfxUser || G.replay) return; G.fpsAcc += dt; G.fpsN++;
